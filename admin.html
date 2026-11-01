@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eyong's Complex | Admin Management & Settings Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Socket.io Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            light: '#F5E08F',
+                            DEFAULT: '#D4AF37',
+                            dark: '#A38018',
+                            bright: '#FFD700',
+                        },
+                        dark: {
+                            base: '#0A0A0A',
+                            surface: '#141414',
+                            card: '#1E1E1E',
+                            border: '#2E2E2E'
+                        }
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF099 0%, #D4AF37 50%, #A38018 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border { border: 1px solid rgba(212, 175, 55, 0.35); }
+        .gold-border-glow {
+            border: 1px solid rgba(212, 175, 55, 0.6);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+        }
+        .gold-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #A38018 100%);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .gold-btn:hover {
+            background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: #2E2E2E; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+    </style>
+</head>
+<body class="bg-dark-base text-gray-200 font-sans min-h-screen flex flex-col selection:bg-gold selection:text-black">
+
+    <!-- Admin Top Header -->
+    <header class="bg-dark-surface border-b border-gold/20 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full border-2 border-gold flex items-center justify-center bg-black shadow-lg shadow-gold/20">
+                    <span class="font-cinzel text-2xl font-black text-gold">E</span>
+                </div>
+                <div>
+                    <h1 class="font-cinzel text-base sm:text-xl font-bold tracking-widest gold-gradient-text" id="header-app-title">ADMIN MANAGEMENT PORTAL</h1>
+                    <p class="text-[10px] text-gray-400 tracking-widest uppercase">Live Dynamic Customer Sync • Cameroon</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full text-[11px] text-emerald-400 font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Customer Sync Active</span>
+                </div>
+                <button onclick="syncAllToCustomer()" class="gold-btn px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-rotate mr-1"></i>
+                    <span>BROADCAST ALL SETTINGS</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Metrics Dashboard Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-dark-card p-5 rounded-2xl gold-border relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Total Completed Sales</span>
+                    <div class="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center text-gold">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+                <div id="stat-revenue" class="text-2xl font-bold font-cinzel text-white mt-2">0 FCFA</div>
+                <span class="text-[10px] text-gold/80">From paid orders & pool bookings</span>
+            </div>
+
+            <div class="bg-dark-card p-5 rounded-2xl border border-dark-border relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Active Incoming</span>
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                </div>
+                <div id="stat-active" class="text-2xl font-bold text-white mt-2">0</div>
+                <span class="text-[10px] text-gray-400">Pending & preparing requests</span>
+            </div>
+
+            <div class="bg-dark-card p-5 rounded-2xl border border-dark-border relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Total Menu Passes</span>
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-utensils"></i>
+                    </div>
+                </div>
+                <div id="stat-menu-count" class="text-2xl font-bold text-white mt-2">0</div>
+                <span class="text-[10px] text-gray-400">Active items & booking passes</span>
+            </div>
+
+            <div class="bg-dark-card p-5 rounded-2xl border border-dark-border relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Active Sections</span>
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+                <div id="stat-sections-count" class="text-2xl font-bold text-white mt-2">0</div>
+                <span class="text-[10px] text-gray-400">Configured customer views</span>
+            </div>
+        </div>
+
+        <!-- Main Tab Navigation Bar -->
+        <div class="flex border-b border-dark-border overflow-x-auto space-x-6 scrollbar-none">
+            <button id="tab-orders" onclick="switchTab('orders')" class="pb-3 text-xs font-bold border-b-2 border-gold text-gold flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-receipt"></i>
+                <span>ORDERS & BOOKINGS</span>
+            </button>
+            <button id="tab-sections" onclick="switchTab('sections')" class="pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-sliders"></i>
+                <span>SECTION ADAPTABILITY</span>
+            </button>
+            <button id="tab-menu" onclick="switchTab('menu')" class="pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-book-open"></i>
+                <span>MENU & SLOTS CATALOG</span>
+            </button>
+            <button id="tab-settings" onclick="switchTab('settings')" class="pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-gears"></i>
+                <span>CUSTOMER SITE SETTINGS</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: Orders & Bookings Board -->
+        <div id="view-orders" class="space-y-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-4 rounded-xl border border-dark-border">
+                <div>
+                    <h3 class="font-cinzel font-bold text-gold text-sm">Live Dispatch Console</h3>
+                    <p class="text-xs text-gray-400">Manage real-time food orders and per-person pool reservations</p>
+                </div>
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <select id="order-filter-status" onchange="renderOrders()" class="bg-black text-xs font-semibold border border-dark-border rounded-xl px-3 py-2 text-gray-300 focus:outline-none">
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed / Preparing</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <button onclick="clearCompletedOrders()" class="bg-dark-card border border-dark-border text-gray-300 hover:text-red-400 hover:border-red-500/40 px-3 py-2 rounded-xl text-xs transition whitespace-nowrap">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Clear Finished
+                    </button>
+                </div>
+            </div>
+
+            <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- TAB 2: Section Adaptability Manager -->
+        <div id="view-sections" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
+                <div>
+                    <h3 class="font-cinzel font-bold text-gold text-base">Customer Site Section Adaptability</h3>
+                    <p class="text-xs text-gray-400">Add or configure sections. Switch operating modes between 'Standard Food/Drink Ordering' and 'Per Person Reservation Booking'.</p>
+                </div>
+                <button onclick="openSectionModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-folder-plus"></i>
+                    <span>CREATE NEW SECTION</span>
+                </button>
+            </div>
+
+            <div class="bg-dark-card rounded-2xl gold-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-black/80 text-gray-400 font-bold uppercase tracking-wider border-b border-dark-border">
+                            <tr>
+                                <th class="py-4 px-6">Section Name</th>
+                                <th class="py-4 px-6">Operating Mode</th>
+                                <th class="py-4 px-6">Customer Visibility</th>
+                                <th class="py-4 px-6 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sections-table-body" class="divide-y divide-dark-border/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Menu & Service Item Catalog -->
+        <div id="view-menu" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
+                <div>
+                    <h3 class="font-cinzel font-bold text-gold text-base">Menu & Booking Slots Catalog</h3>
+                    <p class="text-xs text-gray-400">Manage Cameroonian culinary dishes, drinks, pool passes, and VIP reservation slots.</p>
+                </div>
+                <button onclick="openMenuModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>ADD DISH OR PASS</span>
+                </button>
+            </div>
+
+            <div class="bg-dark-card rounded-2xl border border-dark-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-black/80 text-gray-400 font-bold uppercase tracking-wider border-b border-dark-border">
+                            <tr>
+                                <th class="py-4 px-6">Item / Pass Title</th>
+                                <th class="py-4 px-6">Assigned Section</th>
+                                <th class="py-4 px-6">Price (FCFA)</th>
+                                <th class="py-4 px-6">Availability</th>
+                                <th class="py-4 px-6 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-table-body" class="divide-y divide-dark-border/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Customer Site Configuration Settings -->
+        <div id="view-settings" class="hidden space-y-6">
+            <form onsubmit="saveSiteSettings(event)" class="space-y-6">
+                <!-- Branding Settings Card -->
+                <div class="bg-dark-card p-6 rounded-2xl gold-border space-y-4">
+                    <div class="border-b border-dark-border pb-3 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-cinzel text-lg font-bold text-gold">Dynamic Branding & Identity</h3>
+                            <p class="text-xs text-gray-400">Updates restaurant name, taglines, currency symbols, and service fees on the Customer Site</p>
+                        </div>
+                        <i class="fa-solid fa-sliders text-gold text-xl"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Complex / Restaurant Name</label>
+                            <input type="text" id="setting-app-title" required class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Tagline / Subtitle</label>
+                            <input type="text" id="setting-app-tagline" required class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Currency Label</label>
+                            <input type="text" id="setting-currency" required placeholder="FCFA" class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Service / Packaging Tax (%)</label>
+                            <input type="number" step="0.1" id="setting-tax-rate" required class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcement Banner & Customer Features Card -->
+                <div class="bg-dark-card p-6 rounded-2xl border border-dark-border space-y-4">
+                    <div class="border-b border-dark-border pb-3 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-cinzel text-lg font-bold text-gold">Announcement Banner & Contact Details</h3>
+                            <p class="text-xs text-gray-400">Configure global top bar banner notice and customer contact information</p>
+                        </div>
+                        <i class="fa-solid fa-bullhorn text-gold text-xl"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="md:col-span-2">
+                            <label class="text-gray-400 font-semibold mb-1 block">Live Emergency Announcement Banner Text</label>
+                            <input type="text" id="setting-announcement" placeholder="e.g. Special Weekend Pool Party this Saturday! Reserve slots now." class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Contact Phone Number</label>
+                            <input type="text" id="setting-contact-phone" placeholder="+237 670 000 000" class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-semibold mb-1 block">Business Hours</label>
+                            <input type="text" id="setting-hours" placeholder="10:00 AM - 11:30 PM Daily" class="w-full bg-black border border-dark-border focus:border-gold rounded-xl p-3 text-white focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Toggle Switches Card -->
+                <div class="bg-dark-card p-6 rounded-2xl border border-dark-border space-y-4">
+                    <div class="border-b border-dark-border pb-3">
+                        <h3 class="font-cinzel text-lg font-bold text-gold">Feature Toggles for Customer Site</h3>
+                        <p class="text-xs text-gray-400">Enable or disable features for customer portal dynamically</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <label class="flex items-center space-x-3 bg-black p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <input type="checkbox" id="setting-toggle-announcement" class="w-4 h-4 accent-gold rounded">
+                            <span class="text-gray-300 font-medium">Show Announcement Bar</span>
+                        </label>
+                        <label class="flex items-center space-x-3 bg-black p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <input type="checkbox" id="setting-toggle-momo" class="w-4 h-4 accent-gold rounded">
+                            <span class="text-gray-300 font-medium">Enable MTN MoMo / Orange Money Payment Options</span>
+                        </label>
+                        <label class="flex items-center space-x-3 bg-black p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <input type="checkbox" id="setting-toggle-tracking" class="w-4 h-4 accent-gold rounded">
+                            <span class="text-gray-300 font-medium">Enable Order & Booking Live Tracker Modal</span>
+                        </label>
+                        <label class="flex items-center space-x-3 bg-black p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <input type="checkbox" id="setting-toggle-notes" class="w-4 h-4 accent-gold rounded">
+                            <span class="text-gray-300 font-medium">Allow Special Chef Request Notes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="loadSiteSettingsIntoForm()" class="px-5 py-3 rounded-xl text-xs font-semibold bg-dark-card text-gray-400 border border-dark-border hover:text-white">Reset Changes</button>
+                    <button type="submit" class="gold-btn px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>SAVE & BROADCAST SETTINGS</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Admin Security Passcode Authentication Modal -->
+    <div id="modal-auth" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-dark-surface border border-gold/40 w-full max-w-sm rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-gold/10 border border-gold text-gold flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <h3 class="font-cinzel text-xl font-bold text-white">Staff Authentication</h3>
+                <p class="text-xs text-gray-400 mt-1">Enter key code to access Eyong's Complex Management.</p>
+            </div>
+            
+            <input type="password" id="auth-code" placeholder="Passcode" 
+                   class="w-full text-center bg-black border border-dark-border focus:border-gold rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest">
+            
+            <button onclick="loginAdmin()" class="w-full gold-btn py-3 rounded-xl text-xs font-bold tracking-wider uppercase">
+                AUTHENTICATE ACCESS
+            </button>
+        </div>
+    </div>
+
+    <!-- Section Modal (Create / Edit) -->
+    <div id="modal-section" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-surface border border-gold/40 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="closeSectionModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="sec-modal-title" class="font-cinzel text-lg font-bold text-gold mb-1">Configure Section</h3>
+            <p class="text-xs text-gray-400 mb-4">Adapt customer site categories and guest booking mode.</p>
+
+            <form onsubmit="saveSection(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="sec-id">
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Section Title Name</label>
+                    <input type="text" id="sec-name" required placeholder="e.g., Pool Reservation, VIP Cabana, Drinks" 
+                           class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Customer Operating Mode</label>
+                    <select id="sec-type" class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                        <option value="standard">Standard Order Mode (Quantity cart selections)</option>
+                        <option value="booking">Per Person Booking Mode (Guest count, Date, Time Slot selection)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Visibility Status</label>
+                    <select id="sec-visible" class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                        <option value="true">Visible on Customer Site</option>
+                        <option value="false">Hidden / Disabled</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex justify-end space-x-3">
+                    <button type="button" onclick="closeSectionModal()" class="px-4 py-2.5 rounded-xl bg-black text-gray-400 border border-dark-border">Cancel</button>
+                    <button type="submit" class="gold-btn px-6 py-2.5 rounded-xl text-xs font-bold">Save Section</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dish / Item Modal (Create / Edit) -->
+    <div id="modal-dish" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-surface border border-gold/40 w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="closeMenuModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="dish-modal-title" class="font-cinzel text-lg font-bold text-gold mb-1">Add Dish or Pass Slot</h3>
+            <p class="text-xs text-gray-400 mb-4">Set item details and assign to customer section category.</p>
+
+            <form onsubmit="saveDish(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="dish-id">
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Item Title / Pass Name</label>
+                    <input type="text" id="dish-name" required placeholder="e.g. Whole Capitaine Grill or VIP Pool Pass" 
+                           class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-gray-400 font-semibold mb-1 block">Assigned Section</label>
+                        <select id="dish-category" required class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 font-semibold mb-1 block">Price (FCFA)</label>
+                        <input type="number" step="500" id="dish-price" required placeholder="5000" 
+                               class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Image URL</label>
+                    <input type="url" id="dish-image" required placeholder="https://images.unsplash.com/..." 
+                           class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Description</label>
+                    <textarea id="dish-desc" rows="3" required placeholder="Item ingredients, preparation or booking details..." 
+                              class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end space-x-3">
+                    <button type="button" onclick="closeMenuModal()" class="px-4 py-2.5 rounded-xl bg-black text-gray-400 border border-dark-border">Cancel</button>
+                    <button type="submit" class="gold-btn px-6 py-2.5 rounded-xl text-xs font-bold">Save Item / Pass</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-dark-card border border-gold text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-gold"></i>
+        <span id="toast-message" class="text-xs font-medium">Notification</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Socket.io Connection
+        const socket = io();
+        let isAuthenticated = false;
+
+        let siteSettings = JSON.parse(localStorage.getItem('eyong_cameroon_settings')) || {
+            appName: "EYONG'S COMPLEX",
+            appTagline: "CAMEROON'S PREMIER DINING, POOL & LOUNGE",
+            currencySymbol: "FCFA",
+            taxRate: 2.0,
+            announcementText: "Welcome to Eyong's Complex! Reserve your infinity pool passes and fine Cameroonian dishes online.",
+            showAnnouncement: true,
+            enableMoMo: true,
+            enableTracking: true,
+            allowNotes: true
+        };
+
+        let sections = JSON.parse(localStorage.getItem('eyong_cameroon_sections')) || [
+            { id: 'sec-all', name: 'All', type: 'standard', visible: true },
+            { id: 'sec-delicacies', name: 'Local Delicacies', type: 'standard', visible: true },
+            { id: 'sec-grill', name: 'Grill & Mains', type: 'standard', visible: true },
+            { id: 'sec-pool', name: 'Pool Reservation', type: 'booking', visible: true },
+            { id: 'sec-drinks', name: 'Drinks & Lounge', type: 'standard', visible: true }
+        ];
+
+        let menuItems = JSON.parse(localStorage.getItem('eyong_cameroon_menu')) || [
+            { id: 'cm1', name: 'Ndolé Royale Special', category: 'Local Delicacies', price: 12000, description: 'Fresh bitterleaf cooked with groundnuts, prawns, beef, and smoked fish.', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80', available: true }
+        ];
+
+        let orders = JSON.parse(localStorage.getItem('eyong_cameroon_orders')) || [];
+
+        window.onload = function() {
+            saveStateToStorage();
+
+            // Socket Listeners
+            socket.on('init_state', (state) => {
+                siteSettings = state.settings;
+                sections = state.sections;
+                menuItems = state.menu;
+                orders = state.orders;
+                saveStateToStorage();
+            });
+
+            socket.on('new_order_received', (order) => {
+                orders.unshift(order);
+                saveStateToStorage();
+                if (isAuthenticated) {
+                    renderDashboard();
+                }
+                playChimeSound();
+                showToast(`New incoming ${order.type === 'Booking' ? 'Pool Booking' : 'Order'} #${order.id}!`);
+            });
+        };
+
+        // Web Audio API Chime Sound for Incoming Orders
+        function playChimeSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5 note
+
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } catch (e) {
+                console.log('Audio playback prevented or unsupported');
+            }
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('eyong_cameroon_settings', JSON.stringify(siteSettings));
+            localStorage.setItem('eyong_cameroon_sections', JSON.stringify(sections));
+            localStorage.setItem('eyong_cameroon_menu', JSON.stringify(menuItems));
+            localStorage.setItem('eyong_cameroon_orders', JSON.stringify(orders));
+        }
+
+        function syncAllToCustomer() {
+            saveStateToStorage();
+            socket.emit('update_system_state', {
+                settings: siteSettings,
+                sections: sections,
+                menu: menuItems
+            });
+            showToast('All settings & menus broadcasted via Socket.io');
+        }
+
+        function formatCurrency(amount) {
+            const symbol = siteSettings.currencySymbol || 'FCFA';
+            return new Intl.NumberFormat('fr-CM', { maximumFractionDigits: 0 }).format(amount) + ' ' + symbol;
+        }
+
+        function loginAdmin() {
+            const pass = document.getElementById('auth-code').value;
+            if (pass === 'Edwin') {
+                isAuthenticated = true;
+                document.getElementById('modal-auth').classList.add('hidden');
+                loadSiteSettingsIntoForm();
+                renderDashboard();
+                showToast('Welcome back, Eyong Complex Admin');
+            } else {
+                showToast('Invalid Security Passcode.', true);
+            }
+        }
+
+        function switchTab(tab) {
+            const tabs = ['orders', 'sections', 'menu', 'settings'];
+            tabs.forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                const tabView = document.getElementById(`view-${t}`);
+                
+                if (t === tab) {
+                    tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-gold text-gold flex items-center space-x-2 whitespace-nowrap";
+                    tabView.classList.remove('hidden');
+                } else {
+                    tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap";
+                    tabView.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderDashboard() {
+            document.getElementById('header-app-title').innerText = `${siteSettings.appName} PORTAL`;
+
+            const completed = orders.filter(o => o.status === 'Completed');
+            const totalRev = completed.reduce((s, o) => s + (o.totalAmount || 0), 0);
+            const activeCount = orders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled').length;
+
+            document.getElementById('stat-revenue').innerText = formatCurrency(totalRev);
+            document.getElementById('stat-active').innerText = activeCount;
+            document.getElementById('stat-menu-count').innerText = menuItems.length;
+            document.getElementById('stat-sections-count').innerText = sections.length;
+
+            renderOrders();
+            renderSectionsTable();
+            renderMenuTable();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            const filter = document.getElementById('order-filter-status').value;
+
+            const filteredOrders = orders.filter(ord => {
+                if (filter === 'All') return true;
+                if (filter === 'Confirmed') return ord.status === 'Confirmed' || ord.status === 'Preparing';
+                return ord.status === filter;
+            });
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-dark-card rounded-2xl border border-dark-border">
+                        <i class="fa-solid fa-inbox text-3xl text-gold/30 mb-2"></i>
+                        <p class="text-xs text-gray-500">No active orders or bookings match selection.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(ord => `
+                <div class="bg-dark-card rounded-2xl border border-gold/30 p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-dark-border pb-2">
+                        <span class="font-cinzel text-gold font-bold text-sm">${ord.id}</span>
+                        <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                            ord.type === 'Booking' 
+                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        }">
+                            ${ord.type === 'Booking' ? 'POOL / EXPERIENCE' : 'FOOD & DRINKS'}
+                        </span>
+                    </div>
+
+                    <div class="text-xs text-gray-300 space-y-1">
+                        <p><strong>Customer:</strong> ${ord.customerName} (${ord.phone || 'N/A'})</p>
+                        ${ord.type === 'Booking' ? `
+                            <p><strong>Section:</strong> <span class="text-gold font-semibold">${ord.section}</span></p>
+                            <p><strong>Pass:</strong> ${ord.itemName}</p>
+                            <p><strong>Guests:</strong> ${ord.guests} Person(s)</p>
+                            <p><strong>Date & Slot:</strong> ${ord.reservationDate} (${ord.timeSlot})</p>
+                        ` : `
+                            <p><strong>Location:</strong> ${ord.location}</p>
+                            ${ord.notes ? `<p class="text-gold italic text-[11px]">Note: "${ord.notes}"</p>` : ''}
+                        `}
+                        <p><strong>Payment:</strong> <span class="text-gold font-semibold">${ord.paymentMethod || 'Desk Pay'}</span></p>
+                    </div>
+
+                    ${ord.type !== 'Booking' && ord.items ? `
+                        <div class="bg-black/60 p-3 rounded-xl space-y-1 text-xs border border-dark-border">
+                            ${ord.items.map(i => `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300"><strong class="text-gold">${i.quantity}x</strong> ${i.name}</span>
+                                    <span class="text-gray-400">${formatCurrency(i.price * i.quantity)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="pt-2 border-t border-dark-border flex items-center justify-between">
+                        <span class="font-bold text-white text-xs">${formatCurrency(ord.totalAmount)}</span>
+                        <select onchange="updateOrderStatus('${ord.id}', this.value)" class="bg-black border border-gold text-gold text-xs font-bold rounded-xl px-2.5 py-1.5 focus:outline-none">
+                            <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}> Pending</option>
+                            <option value="Confirmed" ${ord.status === 'Confirmed' || ord.status === 'Preparing' ? 'selected' : ''}> Confirmed / Kitchen</option>
+                            <option value="Completed" ${ord.status === 'Completed' ? 'selected' : ''}> Completed</option>
+                            <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}> Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateOrderStatus(orderId, status) {
+            const ord = orders.find(o => o.id === orderId);
+            if (ord) {
+                ord.status = status;
+                saveStateToStorage();
+                socket.emit('update_order_status', { orderId, status });
+                renderDashboard();
+                showToast(`Order #${orderId} status set to ${status}`);
+            }
+        }
+
+        function clearCompletedOrders() {
+            const authName = prompt("Enter Authorization Name:");
+            if (authName === "Percy") {
+                orders = orders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled');
+                saveStateToStorage();
+                renderDashboard();
+                showToast('Cleared completed/cancelled orders');
+            } else {
+                showToast('Authorization Failed', true);
+            }
+        }
+
+        function renderSectionsTable() {
+            const tbody = document.getElementById('sections-table-body');
+            tbody.innerHTML = sections.map(sec => `
+                <tr class="hover:bg-black/40 transition">
+                    <td class="py-4 px-6 font-bold text-white flex items-center space-x-2">
+                        <i class="${sec.type === 'booking' ? 'fa-solid fa-ticket text-purple-400' : 'fa-solid fa-utensils text-gold'}"></i>
+                        <span>${sec.name}</span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                            sec.type === 'booking' 
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' 
+                            : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                        }">
+                            ${sec.type === 'booking' ? 'Per Person Booking Mode' : 'Standard Order Mode'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            sec.visible !== false ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                        }">
+                            ${sec.visible !== false ? 'Active Visible' : 'Hidden'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-right space-x-2">
+                        ${sec.name !== 'All' ? `
+                            <button onclick="editSection('${sec.id}')" class="p-2 bg-dark-card border border-dark-border text-gold rounded-lg hover:border-gold">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteSection('${sec.id}')" class="p-2 bg-dark-card border border-dark-border text-red-400 rounded-lg hover:border-red-500/50">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        ` : '<span class="text-gray-600 text-[10px]">Default View</span>'}
+                    </td>
+                </tr>
+            `).join('');
+
+            const dishSelect = document.getElementById('dish-category');
+            dishSelect.innerHTML = sections.filter(s => s.name !== 'All').map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        }
+
+        function openSectionModal(id = null) {
+            document.getElementById('modal-section').classList.remove('hidden');
+            if (id) {
+                const sec = sections.find(s => s.id === id);
+                document.getElementById('sec-id').value = sec.id;
+                document.getElementById('sec-name').value = sec.name;
+                document.getElementById('sec-type').value = sec.type;
+                document.getElementById('sec-visible').value = sec.visible !== false ? 'true' : 'false';
+                document.getElementById('sec-modal-title').innerText = 'Edit Section Configuration';
+            } else {
+                document.getElementById('sec-id').value = '';
+                document.getElementById('sec-name').value = '';
+                document.getElementById('sec-type').value = 'standard';
+                document.getElementById('sec-visible').value = 'true';
+                document.getElementById('sec-modal-title').innerText = 'Create New Customer Section';
+            }
+        }
+
+        function closeSectionModal() {
+            document.getElementById('modal-section').classList.add('hidden');
+        }
+
+        function saveSection(e) {
+            e.preventDefault();
+            const id = document.getElementById('sec-id').value;
+            const name = document.getElementById('sec-name').value.trim();
+            const type = document.getElementById('sec-type').value;
+            const visible = document.getElementById('sec-visible').value === 'true';
+
+            if (id) {
+                const idx = sections.findIndex(s => s.id === id);
+                if (idx !== -1) sections[idx] = { id, name, type, visible };
+            } else {
+                sections.push({ id: 'sec-' + Date.now(), name, type, visible });
+            }
+
+            syncAllToCustomer();
+            renderDashboard();
+            closeSectionModal();
+            showToast(`Section "${name}" saved`);
+        }
+
+        function editSection(id) { openSectionModal(id); }
+
+        function deleteSection(id) {
+            sections = sections.filter(s => s.id !== id);
+            syncAllToCustomer();
+            renderDashboard();
+            showToast('Section deleted');
+        }
+
+        function renderMenuTable() {
+            const tbody = document.getElementById('menu-table-body');
+            tbody.innerHTML = menuItems.map(item => `
+                <tr class="hover:bg-black/40 transition">
+                    <td class="py-4 px-6 flex items-center space-x-3">
+                        <img src="${item.image}" class="w-10 h-10 rounded-xl object-cover border border-dark-border" onerror="this.src='https://placehold.co/100x100/121212/D4AF37?text=Eyong'">
+                        <div>
+                            <div class="font-bold text-white text-xs">${item.name}</div>
+                            <div class="text-[10px] text-gray-400 line-clamp-1 max-w-xs">${item.description}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-gold font-semibold">${item.category}</td>
+                    <td class="py-4 px-6 font-bold text-white">${formatCurrency(item.price)}</td>
+                    <td class="py-4 px-6">
+                        <button onclick="toggleAvailability('${item.id}')" class="px-3 py-1 rounded-full text-[10px] font-bold ${
+                            item.available !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }">
+                            ${item.available !== false ? 'Available' : 'Sold Out'}
+                        </button>
+                    </td>
+                    <td class="py-4 px-6 text-right space-x-2">
+                        <button onclick="editDish('${item.id}')" class="p-2 bg-dark-card border border-dark-border text-gold rounded-lg hover:border-gold">
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="deleteDish('${item.id}')" class="p-2 bg-dark-card border border-dark-border text-red-400 rounded-lg hover:border-red-500/50">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleAvailability(id) {
+            const item = menuItems.find(m => m.id === id);
+            if (item) {
+                item.available = !(item.available !== false);
+                syncAllToCustomer();
+                renderDashboard();
+                showToast(`Status updated for "${item.name}"`);
+            }
+        }
+
+        function openMenuModal(editId = null) {
+            document.getElementById('modal-dish').classList.remove('hidden');
+            if (editId) {
+                const dish = menuItems.find(m => m.id === editId);
+                document.getElementById('dish-id').value = dish.id;
+                document.getElementById('dish-name').value = dish.name;
+                document.getElementById('dish-category').value = dish.category;
+                document.getElementById('dish-price').value = dish.price;
+                document.getElementById('dish-image').value = dish.image;
+                document.getElementById('dish-desc').value = dish.description;
+                document.getElementById('dish-modal-title').innerText = 'Edit Dish / Booking Pass';
+            } else {
+                document.getElementById('dish-id').value = '';
+                document.getElementById('dish-name').value = '';
+                document.getElementById('dish-price').value = '';
+                document.getElementById('dish-image').value = '';
+                document.getElementById('dish-desc').value = '';
+                document.getElementById('dish-modal-title').innerText = 'Add New Dish or Booking Pass';
+            }
+        }
+
+        function closeMenuModal() {
+            document.getElementById('modal-dish').classList.add('hidden');
+        }
+
+        function saveDish(e) {
+            e.preventDefault();
+            const id = document.getElementById('dish-id').value;
+            const dishData = {
+                id: id || 'cm' + Date.now(),
+                name: document.getElementById('dish-name').value,
+                category: document.getElementById('dish-category').value,
+                price: parseFloat(document.getElementById('dish-price').value),
+                image: document.getElementById('dish-image').value,
+                description: document.getElementById('dish-desc').value,
+                available: true
+            };
+
+            if (id) {
+                const idx = menuItems.findIndex(m => m.id === id);
+                if (idx !== -1) menuItems[idx] = dishData;
+            } else {
+                menuItems.unshift(dishData);
+            }
+
+            syncAllToCustomer();
+            renderDashboard();
+            closeMenuModal();
+            showToast(`Item "${dishData.name}" saved`);
+        }
+
+        function editDish(id) { openMenuModal(id); }
+
+        function deleteDish(id) {
+            menuItems = menuItems.filter(m => m.id !== id);
+            syncAllToCustomer();
+            renderDashboard();
+            showToast('Item deleted');
+        }
+
+        function loadSiteSettingsIntoForm() {
+            document.getElementById('setting-app-title').value = siteSettings.appName || '';
+            document.getElementById('setting-app-tagline').value = siteSettings.appTagline || '';
+            document.getElementById('setting-currency').value = siteSettings.currencySymbol || 'FCFA';
+            document.getElementById('setting-tax-rate').value = siteSettings.taxRate || 2.0;
+            document.getElementById('setting-announcement').value = siteSettings.announcementText || '';
+            document.getElementById('setting-contact-phone').value = siteSettings.contactPhone || '';
+            document.getElementById('setting-hours').value = siteSettings.businessHours || '';
+
+            document.getElementById('setting-toggle-announcement').checked = siteSettings.showAnnouncement !== false;
+            document.getElementById('setting-toggle-momo').checked = siteSettings.enableMoMo !== false;
+            document.getElementById('setting-toggle-tracking').checked = siteSettings.enableTracking !== false;
+            document.getElementById('setting-toggle-notes').checked = siteSettings.allowNotes !== false;
+        }
+
+        function saveSiteSettings(e) {
+            e.preventDefault();
+
+            siteSettings = {
+                appName: document.getElementById('setting-app-title').value.trim(),
+                appTagline: document.getElementById('setting-app-tagline').value.trim(),
+                currencySymbol: document.getElementById('setting-currency').value.trim(),
+                taxRate: parseFloat(document.getElementById('setting-tax-rate').value),
+                announcementText: document.getElementById('setting-announcement').value.trim(),
+                contactPhone: document.getElementById('setting-contact-phone').value.trim(),
+                businessHours: document.getElementById('setting-hours').value.trim(),
+
+                showAnnouncement: document.getElementById('setting-toggle-announcement').checked,
+                enableMoMo: document.getElementById('setting-toggle-momo').checked,
+                enableTracking: document.getElementById('setting-toggle-tracking').checked,
+                allowNotes: document.getElementById('setting-toggle-notes').checked
+            };
+
+            syncAllToCustomer();
+            renderDashboard();
+            showToast('Customer Site Settings updated & broadcast');
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            const icon = document.getElementById('toast-icon');
+
+            if (isError) {
+                toast.classList.replace('border-gold', 'border-red-500');
+                icon.className = 'fa-solid fa-circle-exclamation text-red-500';
+            } else {
+                toast.classList.replace('border-red-500', 'border-gold');
+                icon.className = 'fa-solid fa-circle-check text-gold';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+    </script>
+</body>
+</html>
+
