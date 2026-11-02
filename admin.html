@@ -108,7 +108,7 @@
                     </div>
                 </div>
                 <div id="stat-revenue" class="text-2xl font-bold font-cinzel text-white mt-2">0 FCFA</div>
-                <span class="text-[10px] text-gold/80">From paid orders & pool bookings</span>
+                <span class="text-[10px] text-gold/80">From paid orders & bookings</span>
             </div>
 
             <div class="bg-dark-card p-5 rounded-2xl border border-dark-border relative overflow-hidden">
@@ -170,7 +170,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-4 rounded-xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-sm">Live Dispatch Console</h3>
-                    <p class="text-xs text-gray-400">Manage real-time food orders and per-person pool reservations</p>
+                    <p class="text-xs text-gray-400">Manage real-time food orders, per-person pool reservations, and per-day stay bookings</p>
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <select id="order-filter-status" onchange="renderOrders()" class="bg-black text-xs font-semibold border border-dark-border rounded-xl px-3 py-2 text-gray-300 focus:outline-none">
@@ -194,7 +194,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-base">Customer Site Section Adaptability</h3>
-                    <p class="text-xs text-gray-400">Add or configure sections. Switch operating modes between 'Standard Food/Drink Ordering' and 'Per Person Reservation Booking'.</p>
+                    <p class="text-xs text-gray-400">Configure operating modes: Standard Orders, Per Person Booking, or Per Day Booking.</p>
                 </div>
                 <button onclick="openSectionModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
                     <i class="fa-solid fa-folder-plus"></i>
@@ -224,7 +224,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-base">Menu & Booking Slots Catalog</h3>
-                    <p class="text-xs text-gray-400">Manage Cameroonian culinary dishes, drinks, pool passes, and VIP reservation slots.</p>
+                    <p class="text-xs text-gray-400">Manage dishes, drinks, pool passes, and per-day rental slots.</p>
                 </div>
                 <button onclick="openMenuModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
                     <i class="fa-solid fa-circle-plus"></i>
@@ -383,7 +383,7 @@
                 <input type="hidden" id="sec-id">
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Section Title Name</label>
-                    <input type="text" id="sec-name" required placeholder="e.g., Pool Reservation, VIP Cabana, Drinks" 
+                    <input type="text" id="sec-name" required placeholder="e.g., VIP Rooms, Pool Reservation, Drinks" 
                            class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                 </div>
                 <div>
@@ -391,6 +391,7 @@
                     <select id="sec-type" class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                         <option value="standard">Standard Order Mode (Quantity cart selections)</option>
                         <option value="booking">Per Person Booking Mode (Guest count, Date, Time Slot selection)</option>
+                        <option value="per-day">Per Day Booking Mode (Check-in, Check-out, Number of Days calculation)</option>
                     </select>
                 </div>
                 <div>
@@ -422,7 +423,7 @@
                 <input type="hidden" id="dish-id">
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Item Title / Pass Name</label>
-                    <input type="text" id="dish-name" required placeholder="e.g. Whole Capitaine Grill or VIP Pool Pass" 
+                    <input type="text" id="dish-name" required placeholder="e.g. Executive Suite or Pool Pass" 
                            class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -432,7 +433,7 @@
                     </div>
                     <div>
                         <label class="text-gray-400 font-semibold mb-1 block">Price (FCFA)</label>
-                        <input type="number" step="500" id="dish-price" required placeholder="5000" 
+                        <input type="number" step="500" id="dish-price" required placeholder="25000" 
                                class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                     </div>
                 </div>
@@ -443,7 +444,7 @@
                 </div>
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Description</label>
-                    <textarea id="dish-desc" rows="3" required placeholder="Item ingredients, preparation or booking details..." 
+                    <textarea id="dish-desc" rows="3" required placeholder="Item amenities, package or stay details..." 
                               class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none"></textarea>
                 </div>
 
@@ -523,7 +524,7 @@
                     renderDashboard();
                 }
                 playChimeSound();
-                showToast(`New incoming ${order.type === 'Booking' ? 'Pool Booking' : 'Order'} #${order.id}!`);
+                showToast(`New incoming ${order.type === 'Booking' ? 'Booking' : 'Order'} #${order.id}!`);
             });
         };
 
@@ -659,17 +660,22 @@
                     <div class="flex items-center justify-between border-b border-dark-border pb-2">
                         <span class="font-cinzel text-gold font-bold text-sm">${ord.id}</span>
                         <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
-                            ord.type === 'Booking' 
+                            ord.type === 'Booking' || ord.type === 'PerDayBooking'
                             ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
                             : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                         }">
-                            ${ord.type === 'Booking' ? 'POOL / EXPERIENCE' : 'FOOD & DRINKS'}
+                            ${ord.type === 'PerDayBooking' ? 'PER DAY STAY' : ord.type === 'Booking' ? 'POOL / EXPERIENCE' : 'FOOD & DRINKS'}
                         </span>
                     </div>
 
                     <div class="text-xs text-gray-300 space-y-1">
                         <p><strong>Customer:</strong> ${ord.customerName} (${ord.phone || 'N/A'})</p>
-                        ${ord.type === 'Booking' ? `
+                        ${ord.type === 'PerDayBooking' ? `
+                            <p><strong>Section:</strong> <span class="text-gold font-semibold">${ord.section}</span></p>
+                            <p><strong>Package/Room:</strong> ${ord.itemName}</p>
+                            <p><strong>Check-In:</strong> ${ord.checkInDate}</p>
+                            <p><strong>Check-Out:</strong> ${ord.checkOutDate} (${ord.totalDays} Day(s))</p>
+                        ` : ord.type === 'Booking' ? `
                             <p><strong>Section:</strong> <span class="text-gold font-semibold">${ord.section}</span></p>
                             <p><strong>Pass:</strong> ${ord.itemName}</p>
                             <p><strong>Guests:</strong> ${ord.guests} Person(s)</p>
@@ -681,7 +687,7 @@
                         <p><strong>Payment:</strong> <span class="text-gold font-semibold">${ord.paymentMethod || 'Desk Pay'}</span></p>
                     </div>
 
-                    ${ord.type !== 'Booking' && ord.items ? `
+                    ${ord.type !== 'Booking' && ord.type !== 'PerDayBooking' && ord.items ? `
                         <div class="bg-black/60 p-3 rounded-xl space-y-1 text-xs border border-dark-border">
                             ${ord.items.map(i => `
                                 <div class="flex justify-between">
@@ -696,7 +702,7 @@
                         <span class="font-bold text-white text-xs">${formatCurrency(ord.totalAmount)}</span>
                         <select onchange="updateOrderStatus('${ord.id}', this.value)" class="bg-black border border-gold text-gold text-xs font-bold rounded-xl px-2.5 py-1.5 focus:outline-none">
                             <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}> Pending</option>
-                            <option value="Confirmed" ${ord.status === 'Confirmed' || ord.status === 'Preparing' ? 'selected' : ''}> Confirmed / Kitchen</option>
+                            <option value="Confirmed" ${ord.status === 'Confirmed' || ord.status === 'Preparing' ? 'selected' : ''}> Confirmed / Ready</option>
                             <option value="Completed" ${ord.status === 'Completed' ? 'selected' : ''}> Completed</option>
                             <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}> Cancelled</option>
                         </select>
@@ -734,16 +740,18 @@
             tbody.innerHTML = sections.map(sec => `
                 <tr class="hover:bg-black/40 transition">
                     <td class="py-4 px-6 font-bold text-white flex items-center space-x-2">
-                        <i class="${sec.type === 'booking' ? 'fa-solid fa-ticket text-purple-400' : 'fa-solid fa-utensils text-gold'}"></i>
+                        <i class="${sec.type === 'per-day' ? 'fa-solid fa-calendar-days text-amber-400' : sec.type === 'booking' ? 'fa-solid fa-ticket text-purple-400' : 'fa-solid fa-utensils text-gold'}"></i>
                         <span>${sec.name}</span>
                     </td>
                     <td class="py-4 px-6">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                            sec.type === 'booking' 
+                            sec.type === 'per-day'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                            : sec.type === 'booking' 
                             ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' 
                             : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
                         }">
-                            ${sec.type === 'booking' ? 'Per Person Booking Mode' : 'Standard Order Mode'}
+                            ${sec.type === 'per-day' ? 'Per Day Booking Mode' : sec.type === 'booking' ? 'Per Person Booking Mode' : 'Standard Order Mode'}
                         </span>
                     </td>
                     <td class="py-4 px-6">
@@ -882,7 +890,7 @@
                     document.getElementById('dish-price').value = dish.price;
                     document.getElementById('dish-image').value = dish.image;
                     document.getElementById('dish-desc').value = dish.description;
-                    document.getElementById('dish-modal-title').innerText = 'Edit Dish / Booking Pass';
+                    document.getElementById('dish-modal-title').innerText = 'Edit Item / Pass';
                 }
             } else {
                 document.getElementById('dish-id').value = '';
