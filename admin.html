@@ -170,7 +170,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-4 rounded-xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-sm">Live Dispatch Console</h3>
-                    <p class="text-xs text-gray-400">Manage real-time food orders, pool reservations, and room stays</p>
+                    <p class="text-xs text-gray-400">Manage real-time food orders, pool reservations, and per-day stay bookings</p>
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <select id="order-filter-status" onchange="renderOrders()" class="bg-black text-xs font-semibold border border-dark-border rounded-xl px-3 py-2 text-gray-300 focus:outline-none">
@@ -224,7 +224,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-base">Menu & Booking Slots Catalog</h3>
-                    <p class="text-xs text-gray-400">Manage dishes, drinks, pool passes, and rental slots.</p>
+                    <p class="text-xs text-gray-400">Manage dishes, drinks, pool passes, and per-day rental slots.</p>
                 </div>
                 <button onclick="openMenuModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
                     <i class="fa-solid fa-circle-plus"></i>
@@ -258,7 +258,7 @@
                     <div class="border-b border-dark-border pb-3 flex items-center justify-between">
                         <div>
                             <h3 class="font-cinzel text-lg font-bold text-gold">Dynamic Branding & Identity</h3>
-                            <p class="text-xs text-gray-400">Updates restaurant name, taglines, currency symbols, and service fees</p>
+                            <p class="text-xs text-gray-400">Updates restaurant name, taglines, currency symbols, and service fees on the Customer Site</p>
                         </div>
                         <i class="fa-solid fa-sliders text-gold text-xl"></i>
                     </div>
@@ -417,13 +417,14 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             <h3 id="dish-modal-title" class="font-cinzel text-lg font-bold text-gold mb-1">Add Dish or Pass Slot</h3>
-            <p class="text-xs text-gray-400 mb-4">Set item details and assign image from gallery or link.</p>
+            <p class="text-xs text-gray-400 mb-4">Set item details and select image from your device gallery.</p>
 
             <form onsubmit="saveDish(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="dish-id">
+                <input type="hidden" id="dish-image-base64">
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Item Title / Pass Name</label>
-                    <input type="text" id="dish-name" required placeholder="e.g. Ndolé Royale or Executive Suite" 
+                    <input type="text" id="dish-name" required placeholder="e.g. Executive Suite or Pool Pass" 
                            class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -433,43 +434,23 @@
                     </div>
                     <div>
                         <label class="text-gray-400 font-semibold mb-1 block">Price (FCFA)</label>
-                        <input type="number" step="500" id="dish-price" required placeholder="5000" 
+                        <input type="number" step="500" id="dish-price" required placeholder="25000" 
                                class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                     </div>
                 </div>
-
-                <!-- Gallery Image Picker Selector -->
                 <div>
-                    <label class="text-gray-400 font-semibold mb-1 flex justify-between items-center">
-                        <span>Select Image from Gallery / Preset</span>
-                        <span id="gallery-preview-label" class="text-[10px] text-gold">Preview selected below</span>
-                    </label>
-                    <select id="dish-gallery-select" onchange="onGallerySelectChange(this)" class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none mb-2">
-                        <option value="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80">🍽️ Local Delicacy / Stew Special</option>
-                        <option value="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80">🥩 Grilled Meat & Platter</option>
-                        <option value="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=80">🏊 Luxury Infinity Pool & Cabana</option>
-                        <option value="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80">🏨 Executive Hotel Suite / Stay</option>
-                        <option value="https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80">🍹 Lounge Cocktails & Drinks</option>
-                        <option value="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80">🥘 Traditional Cameroonian Dish</option>
-                        <option value="custom">🔗 Enter Custom Image URL instead...</option>
-                    </select>
-
-                    <!-- Hidden or toggleable custom URL input -->
-                    <div id="custom-url-container" class="hidden mt-2">
-                        <input type="url" id="dish-image" placeholder="https://images.unsplash.com/..." 
-                               class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
+                    <label class="text-gray-400 font-semibold mb-1 block">Select Image from Gallery</label>
+                    <div class="flex items-center space-x-3">
+                        <input type="file" id="dish-image-file" accept="image/*" onchange="handleImageGallerySelect(event)" 
+                               class="w-full bg-black border border-dark-border rounded-xl p-2.5 text-gray-300 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gold file:text-black hover:file:bg-gold-bright cursor-pointer">
                     </div>
-
-                    <!-- Live Thumbnail Preview -->
-                    <div class="mt-2 flex items-center space-x-3 bg-black/40 p-2.5 rounded-xl border border-dark-border">
-                        <img id="dish-img-preview" src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" class="w-12 h-12 rounded-lg object-cover border border-gold/40">
-                        <span class="text-[11px] text-gray-400">Selected thumbnail preview</span>
+                    <div id="image-preview-container" class="mt-2 hidden">
+                        <img id="image-preview" src="" class="w-16 h-16 rounded-xl object-cover border border-gold">
                     </div>
                 </div>
-
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Description</label>
-                    <textarea id="dish-desc" rows="2" required placeholder="Item ingredients, preparation or stay details..." 
+                    <textarea id="dish-desc" rows="3" required placeholder="Item amenities, package or stay details..." 
                               class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none"></textarea>
                 </div>
 
@@ -553,6 +534,23 @@
             });
         };
 
+        // Convert image file selected from device gallery to base64
+        function handleImageGallerySelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64String = e.target.result;
+                    document.getElementById('dish-image-base64').value = base64String;
+                    const preview = document.getElementById('image-preview');
+                    preview.src = base64String;
+                    document.getElementById('image-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Web Audio API Chime Sound for Incoming Orders
         function playChimeSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -572,7 +570,7 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.8);
             } catch (e) {
-                console.log('Audio playback prevented');
+                console.log('Audio playback prevented or unsupported');
             }
         }
 
@@ -604,7 +602,9 @@
             if (pass === 'Edwin') {
                 isAuthenticated = true;
                 const authModal = document.getElementById('modal-auth');
-                if (authModal) authModal.classList.add('hidden');
+                if (authModal) {
+                    authModal.classList.add('hidden');
+                }
                 loadSiteSettingsIntoForm();
                 renderDashboard();
                 showToast("Welcome back, Eyong Complex Admin");
@@ -900,28 +900,11 @@
             }
         }
 
-        function onGallerySelectChange(selectEl) {
-            const val = selectEl.value;
-            const customContainer = document.getElementById('custom-url-container');
-            const previewImg = document.getElementById('dish-img-preview');
-
-            if (val === 'custom') {
-                customContainer.classList.remove('hidden');
-                const customInput = document.getElementById('dish-image');
-                previewImg.src = customInput.value || 'https://placehold.co/100x100/121212/D4AF37?text=Custom';
-            } else {
-                customContainer.classList.add('hidden');
-                document.getElementById('dish-image').value = val;
-                previewImg.src = val;
-            }
-        }
-
         function openMenuModal(editId = null) {
             const modal = document.getElementById('modal-dish');
             if (modal) modal.classList.remove('hidden');
-            const gallerySelect = document.getElementById('dish-gallery-select');
-            const customContainer = document.getElementById('custom-url-container');
-            const previewImg = document.getElementById('dish-img-preview');
+            document.getElementById('dish-image-file').value = '';
+            document.getElementById('image-preview-container').classList.add('hidden');
 
             if (editId) {
                 const dish = menuItems.find(m => m.id === editId);
@@ -930,31 +913,22 @@
                     document.getElementById('dish-name').value = dish.name;
                     document.getElementById('dish-category').value = dish.category;
                     document.getElementById('dish-price').value = dish.price;
+                    document.getElementById('dish-image-base64').value = dish.image;
                     document.getElementById('dish-desc').value = dish.description;
-                    document.getElementById('dish-modal-title').innerText = 'Edit Item / Pass';
-
-                    // Check if image matches one in gallery options
-                    let optionsValues = Array.from(gallerySelect.options).map(o => o.value);
-                    if (optionsValues.includes(dish.image)) {
-                        gallerySelect.value = dish.image;
-                        customContainer.classList.add('hidden');
-                    } else {
-                        gallerySelect.value = 'custom';
-                        customContainer.classList.remove('hidden');
-                        document.getElementById('dish-image').value = dish.image;
+                    
+                    if (dish.image) {
+                        document.getElementById('image-preview').src = dish.image;
+                        document.getElementById('image-preview-container').classList.remove('hidden');
                     }
-                    previewImg.src = dish.image;
+                    document.getElementById('dish-modal-title').innerText = 'Edit Item / Pass';
                 }
             } else {
                 document.getElementById('dish-id').value = '';
                 document.getElementById('dish-name').value = '';
                 document.getElementById('dish-price').value = '';
+                document.getElementById('dish-image-base64').value = '';
                 document.getElementById('dish-desc').value = '';
                 document.getElementById('dish-modal-title').innerText = 'Add New Dish or Booking Pass';
-                gallerySelect.selectedIndex = 0;
-                customContainer.classList.add('hidden');
-                document.getElementById('dish-image').value = gallerySelect.value;
-                previewImg.src = gallerySelect.value;
             }
         }
 
@@ -966,16 +940,14 @@
         function saveDish(e) {
             e.preventDefault();
             const id = document.getElementById('dish-id').value;
-            const gallerySelect = document.getElementById('dish-gallery-select').value;
-            const customUrlInput = document.getElementById('dish-image').value;
-            const finalImage = gallerySelect === 'custom' ? customUrlInput : gallerySelect;
+            const imageBase64 = document.getElementById('dish-image-base64').value || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
 
             const dishData = {
                 id: id || 'cm' + Date.now(),
                 name: document.getElementById('dish-name').value,
                 category: document.getElementById('dish-category').value,
                 price: parseFloat(document.getElementById('dish-price').value),
-                image: finalImage,
+                image: imageBase64,
                 description: document.getElementById('dish-desc').value,
                 available: true
             };
