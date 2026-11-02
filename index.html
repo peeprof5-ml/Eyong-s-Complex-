@@ -11,7 +11,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Socket.io Client -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js" onerror="console.warn('Socket.io offline mode enabled');"></script>
     
     <script>
         tailwind.config = {
@@ -101,11 +101,11 @@
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <!-- Hero Section -->
         <div class="relative rounded-3xl overflow-hidden gold-border-glow bg-dark-card p-8 md:p-12 flex flex-col justify-center items-start min-h-[300px] bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(10,10,10,0.95), rgba(10,10,10,0.4)), url('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80');">
-            <span class="text-[11px] font-bold uppercase tracking-widest text-gold px-3 py-1 bg-gold/10 rounded-full border border-gold/30 mb-3">Authentic Cameroonian Culinary Excellence</span>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-gold px-3 py-1 bg-gold/10 rounded-full border border-gold/30 mb-3">Authentic Cameroonian Culinary & Stay Excellence</span>
             <h2 class="font-cinzel text-3xl md:text-5xl font-extrabold text-white mb-3">Taste the Elegance of Tradition</h2>
-            <p class="text-gray-300 text-sm md:text-base max-w-xl mb-6 leading-relaxed">From royal Ndolé & Barbeque Fish to fine vintage reserve wines, experience high-class Cameroonian gastronomy in FCFA.</p>
+            <p class="text-gray-300 text-sm md:text-base max-w-xl mb-6 leading-relaxed">From royal Ndolé & Barbeque Fish to fine suites and pool passes, experience high-class Cameroonian hospitality.</p>
             <a href="#menu-section" class="gold-btn px-6 py-3 rounded-xl text-xs tracking-wider flex items-center gap-2">
-                <span>VIEW TODAY'S MENU</span>
+                <span>EXPLORE SERVICES & MENU</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
             </a>
         </div>
@@ -115,10 +115,10 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 class="font-cinzel text-2xl font-bold text-white">Our Selection</h3>
-                    <p class="text-xs text-gray-400">Curated with organic local ingredients and international touch</p>
+                    <p class="text-xs text-gray-400">Curated with organic ingredients and luxury suites</p>
                 </div>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" id="menu-search" oninput="renderCustomerMenu()" placeholder="Search Ndolé, Fish, Wine..." 
+                    <input type="text" id="menu-search" oninput="renderCustomerMenu()" placeholder="Search dishes, rooms, passes..." 
                            class="w-full bg-dark-card border border-dark-border focus:border-gold rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none">
                     <i class="fa-solid fa-search absolute right-3.5 top-3 text-gray-500 text-xs"></i>
                 </div>
@@ -127,7 +127,7 @@
             <!-- Categories Filter -->
             <div id="category-pills" class="flex items-center space-x-2 overflow-x-auto pb-4 scrollbar-none"></div>
 
-            <!-- Content Area: Rendered dynamically based on active section type -->
+            <!-- Content Area -->
             <div id="customer-section-content" class="mt-6"></div>
         </div>
     </main>
@@ -135,7 +135,7 @@
     <!-- Footer -->
     <footer class="bg-dark-surface border-t border-dark-border py-8 text-center text-xs text-gray-500 mt-12">
         <p class="font-cinzel text-gold font-bold mb-1">EYONG'S COMPLEX • CAMEROON</p>
-        <p>Douala & Yaoundé • Luxury Restaurant, Lounge & Resort</p>
+        <p>Luxury Restaurant, Suites, Pool & Lounge</p>
     </footer>
 
     <!-- Shopping Cart Sidebar Modal -->
@@ -161,7 +161,7 @@
                         <span id="cart-subtotal" class="text-white font-semibold">0 FCFA</span>
                     </div>
                     <div class="flex justify-between text-gray-400">
-                        <span>Service & Packaging</span>
+                        <span>Service & Packaging Tax</span>
                         <span id="cart-tax" class="text-white font-semibold">0 FCFA</span>
                     </div>
                     <div class="flex justify-between text-base font-cinzel font-bold text-gold pt-2 border-t border-dark-border">
@@ -230,7 +230,7 @@
         </div>
     </div>
 
-    <!-- Booking Modal (For Per-Person Bookings like Pool & VIP Sections) -->
+    <!-- Per-Person Booking Modal (For Pool & Experience Sections) -->
     <div id="modal-booking" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-dark-surface border border-gold/40 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
             <button onclick="closeBookingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -301,6 +301,74 @@
         </div>
     </div>
 
+    <!-- Per-Day Booking Modal (For Hotel Rooms & Suites Stay Bookings) -->
+    <div id="modal-perday" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-surface border border-gold/40 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="closePerDayModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="perday-modal-title" class="font-cinzel text-xl font-bold gold-gradient-text mb-1">Book Stay / Room</h3>
+            <p id="perday-modal-subtitle" class="text-xs text-gray-400 mb-4">Select check-in and check-out dates per day.</p>
+
+            <form id="perday-form" onsubmit="submitPerDayBooking(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="pd-item-id">
+                <input type="hidden" id="pd-item-name">
+                <input type="hidden" id="pd-item-price">
+                <input type="hidden" id="pd-section-name">
+
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Full Name</label>
+                    <input type="text" id="pd-cust-name" required placeholder="Guest Name" 
+                           class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2.5 text-white focus:border-gold focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Phone Number (MTN / Orange)</label>
+                    <input type="tel" id="pd-cust-phone" required placeholder="+237 6XX XXX XXX" 
+                           class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2.5 text-white focus:border-gold focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-gray-400 font-semibold mb-1 block">Check-In Date</label>
+                        <input type="date" id="pd-checkin" required onchange="calculatePerDayTotal()" 
+                               class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2.5 text-white focus:border-gold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 font-semibold mb-1 block">Check-Out Date</label>
+                        <input type="date" id="pd-checkout" required onchange="calculatePerDayTotal()" 
+                               class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2.5 text-white focus:border-gold focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-gray-400 font-semibold mb-1 block">Payment Method</label>
+                    <select id="pd-payment" required class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2.5 text-white focus:border-gold focus:outline-none">
+                        <option value="MTN Mobile Money (MoMo)">MTN Mobile Money (MoMo)</option>
+                        <option value="Orange Money (OM)">Orange Money (OM)</option>
+                        <option value="Pay on Arrival">Pay on Arrival (Desk)</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 border-t border-dark-border space-y-1">
+                    <div class="flex justify-between text-gray-400">
+                        <span>Total Nights / Days:</span>
+                        <span id="pd-days-count" class="text-white font-bold">1 Day(s)</span>
+                    </div>
+                    <div class="flex justify-between text-base font-cinzel font-bold text-gold pt-1">
+                        <span>Total Price:</span>
+                        <span id="perday-total-display">0 FCFA</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full gold-btn py-3 rounded-xl font-bold uppercase tracking-wider flex justify-center items-center gap-2 mt-2">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>CONFIRM STAY BOOKING</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-dark-card border border-gold text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
         <i id="toast-icon" class="fa-solid fa-circle-check text-gold"></i>
@@ -308,8 +376,15 @@
     </div>
 
     <script>
-        // Socket.io Connection
-        const socket = io();
+        // Socket.io Connection with safe fallback
+        let socket = { emit: function() {}, on: function() {} };
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io();
+            }
+        } catch (e) {
+            console.log("Running in offline mode without socket server.");
+        }
 
         let siteSettings = JSON.parse(localStorage.getItem('eyong_cameroon_settings')) || {
             appName: "EYONG'S COMPLEX",
@@ -324,11 +399,11 @@
         };
 
         let sections = JSON.parse(localStorage.getItem('eyong_cameroon_sections')) || [
-            { id: 'sec-all', name: 'All', type: 'standard', visible: true },
-            { id: 'sec-delicacies', name: 'Local Delicacies', type: 'standard', visible: true },
-            { id: 'sec-grill', name: 'Grill & Mains', type: 'standard', visible: true },
-            { id: 'sec-pool', name: 'Pool Reservation', type: 'booking', visible: true },
-            { id: 'sec-drinks', name: 'Drinks & Lounge', type: 'standard', visible: true }
+            { id: 'sec-all', name: 'All', type: 'standard', icon: 'fa-solid fa-border-all', visible: true },
+            { id: 'sec-delicacies', name: 'Local Delicacies', type: 'standard', icon: 'fa-solid fa-bowl-food', visible: true },
+            { id: 'sec-grill', name: 'Grill & Mains', type: 'standard', icon: 'fa-solid fa-fire-burner', visible: true },
+            { id: 'sec-pool', name: 'Pool Reservation', type: 'booking', icon: 'fa-solid fa-water-ladder', visible: true },
+            { id: 'sec-drinks', name: 'Drinks & Lounge', type: 'standard', icon: 'fa-solid fa-champagne-glasses', visible: true }
         ];
 
         let menuItems = JSON.parse(localStorage.getItem('eyong_cameroon_menu')) || [
@@ -346,16 +421,21 @@
             renderCustomerMenu();
             updateCartBadge();
 
+            const todayStr = new Date().toISOString().split('T')[0];
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('book-date').value = tomorrow.toISOString().split('T')[0];
+            const tomStr = tomorrow.toISOString().split('T')[0];
+
+            document.getElementById('book-date').value = tomStr;
+            document.getElementById('pd-checkin').value = todayStr;
+            document.getElementById('pd-checkout').value = tomStr;
 
             // Socket Listeners
             socket.on('init_state', (state) => {
-                siteSettings = state.settings;
-                sections = state.sections;
-                menuItems = state.menu;
-                orders = state.orders.filter(o => o.phone === localStorage.getItem('user_phone') || true);
+                if (state.settings) siteSettings = state.settings;
+                if (state.sections) sections = state.sections;
+                if (state.menu) menuItems = state.menu;
+                if (state.orders) orders = state.orders;
                 saveState();
                 applySiteSettings();
                 renderCategoryPills();
@@ -363,9 +443,9 @@
             });
 
             socket.on('system_state_updated', (state) => {
-                siteSettings = state.settings;
-                sections = state.sections;
-                menuItems = state.menu;
+                if (state.settings) siteSettings = state.settings;
+                if (state.sections) sections = state.sections;
+                if (state.menu) menuItems = state.menu;
                 saveState();
                 applySiteSettings();
                 renderCategoryPills();
@@ -374,7 +454,7 @@
             });
 
             socket.on('order_status_updated', ({ orderId, status, orders: allOrders }) => {
-                orders = allOrders;
+                if (allOrders) orders = allOrders;
                 saveState();
                 renderTrackModal();
                 showToast(`Order #${orderId} status updated: ${status}`);
@@ -414,6 +494,9 @@
             container.innerHTML = visibleSections.map(sec => {
                 const isActive = sec.name === currentCategory;
                 const isBooking = sec.type === 'booking';
+                const isPerDay = sec.type === 'per-day';
+                const iconClass = sec.icon || (isBooking ? 'fa-solid fa-ticket' : isPerDay ? 'fa-solid fa-calendar-days' : 'fa-solid fa-utensils');
+
                 return `
                     <button onclick="setCategory('${sec.name}')" 
                             class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center space-x-2 ${
@@ -421,9 +504,10 @@
                                 ? 'bg-gold text-black border border-gold font-bold shadow-lg shadow-gold/10' 
                                 : 'bg-dark-card text-gray-400 hover:text-white border border-dark-border'
                             }">
-                        <i class="${isBooking ? 'fa-solid fa-ticket text-[11px]' : 'fa-solid fa-utensils text-[11px]'}"></i>
+                        <i class="${iconClass} text-[11px]"></i>
                         <span>${sec.name}</span>
                         ${isBooking ? `<span class="ml-1 text-[9px] px-1.5 py-0.2 bg-black/40 ${isActive ? 'text-black' : 'text-gold'} rounded-md">BOOKING</span>` : ''}
+                        ${isPerDay ? `<span class="ml-1 text-[9px] px-1.5 py-0.2 bg-black/40 ${isActive ? 'text-black' : 'text-gold'} rounded-md">PER DAY</span>` : ''}
                     </button>
                 `;
             }).join('');
@@ -452,48 +536,55 @@
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${filtered.map(item => `
-                        <div class="bg-dark-card rounded-2xl overflow-hidden border border-dark-border hover:border-gold/50 transition duration-300 flex flex-col justify-between group">
-                            <div>
-                                <div class="relative h-48 overflow-hidden bg-black">
-                                    <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://placehold.co/600x400/121212/D4AF37?text=Eyong+Complex'">
-                                    <span class="absolute top-3 right-3 bg-black/80 backdrop-blur-md text-gold font-extrabold text-xs px-3 py-1.5 rounded-full border border-gold/30">
-                                        ${formatFCFA(item.price)} ${isBookingModeItem(item) ? '/ person' : ''}
-                                    </span>
-                                </div>
-                                <div class="p-5">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-[10px] uppercase font-bold text-gold tracking-widest">${item.category}</span>
-                                        ${isBookingModeItem(item) ? '<span class="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/30"><i class="fa-solid fa-user-group mr-1"></i>Per Person</span>' : ''}
+                    ${filtered.map(item => {
+                        const sec = sections.find(s => s.name === item.category);
+                        const mode = sec ? sec.type : 'standard';
+
+                        return `
+                            <div class="bg-dark-card rounded-2xl overflow-hidden border border-dark-border hover:border-gold/50 transition duration-300 flex flex-col justify-between group">
+                                <div>
+                                    <div class="relative h-48 overflow-hidden bg-black">
+                                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://placehold.co/600x400/121212/D4AF37?text=Eyong+Complex'">
+                                        <span class="absolute top-3 right-3 bg-black/80 backdrop-blur-md text-gold font-extrabold text-xs px-3 py-1.5 rounded-full border border-gold/30">
+                                            ${formatFCFA(item.price)} ${mode === 'booking' ? '/ person' : mode === 'per-day' ? '/ day' : ''}
+                                        </span>
                                     </div>
-                                    <h4 class="font-cinzel text-lg font-bold text-white mt-1 group-hover:text-gold transition">${item.name}</h4>
-                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed">${item.description}</p>
+                                    <div class="p-5">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[10px] uppercase font-bold text-gold tracking-widest">${item.category}</span>
+                                            ${mode === 'booking' ? '<span class="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/30"><i class="fa-solid fa-user-group mr-1"></i>Per Person</span>' : ''}
+                                            ${mode === 'per-day' ? '<span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30"><i class="fa-solid fa-calendar-days mr-1"></i>Per Day Stay</span>' : ''}
+                                        </div>
+                                        <h4 class="font-cinzel text-lg font-bold text-white mt-1 group-hover:text-gold transition">${item.name}</h4>
+                                        <p class="text-xs text-gray-400 mt-2 leading-relaxed">${item.description}</p>
+                                    </div>
+                                </div>
+                                <div class="p-5 pt-0">
+                                    ${mode === 'booking' ? `
+                                        <button onclick="openBookingModal('${item.id}')" class="w-full gold-btn py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
+                                            <i class="fa-solid fa-calendar-plus text-xs"></i>
+                                            <span>BOOK PER PERSON</span>
+                                        </button>
+                                    ` : mode === 'per-day' ? `
+                                        <button onclick="openPerDayModal('${item.id}')" class="w-full gold-btn py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
+                                            <i class="fa-solid fa-calendar-days text-xs"></i>
+                                            <span>BOOK PER DAY STAY</span>
+                                        </button>
+                                    ` : `
+                                        <button onclick="addToCart('${item.id}')" class="w-full gold-btn py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
+                                            <i class="fa-solid fa-plus text-xs"></i>
+                                            <span>ADD TO CART</span>
+                                        </button>
+                                    `}
                                 </div>
                             </div>
-                            <div class="p-5 pt-0">
-                                ${isBookingModeItem(item) ? `
-                                    <button onclick="openBookingModal('${item.id}')" class="w-full gold-btn py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
-                                        <i class="fa-solid fa-calendar-plus text-xs"></i>
-                                        <span>BOOK PER PERSON</span>
-                                    </button>
-                                ` : `
-                                    <button onclick="addToCart('${item.id}')" class="w-full gold-btn py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
-                                        <i class="fa-solid fa-plus text-xs"></i>
-                                        <span>ADD TO CART</span>
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
 
-        function isBookingModeItem(item) {
-            const sec = sections.find(s => s.name === item.category);
-            return sec ? sec.type === 'booking' : false;
-        }
-
+        // Per-Person Booking Handler
         function openBookingModal(itemId) {
             const item = menuItems.find(i => i.id === itemId);
             if (!item) return;
@@ -544,12 +635,85 @@
             orders.unshift(newBooking);
             saveState();
 
-            // Emit to server via Socket.io
             socket.emit('submit_order', newBooking);
 
             closeBookingModal();
             document.getElementById('booking-form').reset();
             showToast(`Booking #${newBooking.id} confirmed!`);
+        }
+
+        // Per-Day Stay Booking Handler
+        function openPerDayModal(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('pd-item-id').value = item.id;
+            document.getElementById('pd-item-name').value = item.name;
+            document.getElementById('pd-item-price').value = item.price;
+            document.getElementById('pd-section-name').value = item.category;
+
+            document.getElementById('perday-modal-title').innerText = `Book ${item.name}`;
+            document.getElementById('perday-modal-subtitle').innerText = `${item.category} • ${formatFCFA(item.price)} per day/night`;
+
+            calculatePerDayTotal();
+            document.getElementById('modal-perday').classList.remove('hidden');
+        }
+
+        function closePerDayModal() {
+            document.getElementById('modal-perday').classList.add('hidden');
+        }
+
+        function calculatePerDayTotal() {
+            const price = parseFloat(document.getElementById('pd-item-price').value || 0);
+            const checkIn = new Date(document.getElementById('pd-checkin').value);
+            const checkOut = new Date(document.getElementById('pd-checkout').value);
+
+            let diffTime = checkOut - checkIn;
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (isNaN(diffDays) || diffDays <= 0) diffDays = 1;
+
+            document.getElementById('pd-days-count').innerText = `${diffDays} Day(s)`;
+            const total = price * diffDays;
+            document.getElementById('perday-total-display').innerText = formatFCFA(total);
+        }
+
+        function submitPerDayBooking(e) {
+            e.preventDefault();
+
+            const price = parseFloat(document.getElementById('pd-item-price').value || 0);
+            const checkIn = new Date(document.getElementById('pd-checkin').value);
+            const checkOut = new Date(document.getElementById('pd-checkout').value);
+            let diffTime = checkOut - checkIn;
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (isNaN(diffDays) || diffDays <= 0) diffDays = 1;
+
+            const phone = document.getElementById('pd-cust-phone').value;
+            localStorage.setItem('user_phone', phone);
+
+            const newPerDayBooking = {
+                id: 'PD-' + Math.floor(100000 + Math.random() * 900000),
+                type: 'PerDayBooking',
+                section: document.getElementById('pd-section-name').value,
+                itemName: document.getElementById('pd-item-name').value,
+                timeCreated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                customerName: document.getElementById('pd-cust-name').value,
+                phone: phone,
+                checkInDate: document.getElementById('pd-checkin').value,
+                checkOutDate: document.getElementById('pd-checkout').value,
+                totalDays: diffDays,
+                paymentMethod: document.getElementById('pd-payment').value,
+                totalAmount: price * diffDays,
+                status: 'Pending'
+            };
+
+            orders.unshift(newPerDayBooking);
+            saveState();
+
+            socket.emit('submit_order', newPerDayBooking);
+
+            closePerDayModal();
+            document.getElementById('perday-form').reset();
+            showToast(`Stay Booking #${newPerDayBooking.id} successfully sent!`);
         }
 
         function addToCart(id) {
@@ -586,7 +750,6 @@
             }
         }
 
-        // Check if cart contains only food-related items (excluding pool / exceptional booking sections)
         function checkCartFulfillmentEligibility() {
             const fulfillmentContainer = document.getElementById('fulfillment-container');
             const locationInput = document.getElementById('cust-location');
@@ -599,15 +762,14 @@
                 return;
             }
 
-            // Verify if items belong to food sections (Standard sections that are not booking modes like pool)
             const hasFoodItems = cart.every(item => {
                 const sec = sections.find(s => s.name === item.category);
-                return sec && sec.type !== 'booking';
+                return sec && sec.type === 'standard';
             });
 
             if (hasFoodItems) {
                 fulfillmentContainer.classList.remove('hidden');
-                toggleFulfillmentMode(); // adjust location requirement based on selected radio
+                toggleFulfillmentMode();
             } else {
                 fulfillmentContainer.classList.add('hidden');
                 locationWrapper.classList.remove('hidden');
@@ -677,7 +839,6 @@
             const taxRate = (siteSettings.taxRate || 2.0) / 100;
             const total = subtotal * (1 + taxRate);
 
-            // Check if self pickup is selected for food items
             const pickupRadio = document.querySelector('input[name="fulfillment-type"][value="pickup"]');
             let locationValue = document.getElementById('cust-location').value;
             if (pickupRadio && pickupRadio.checked) {
@@ -701,7 +862,6 @@
             orders.unshift(newOrder);
             saveState();
 
-            // Emit via Socket.io
             socket.emit('submit_order', newOrder);
 
             cart = [];
@@ -727,12 +887,15 @@
             container.innerHTML = orders.map(ord => `
                 <div class="bg-dark-card p-4 rounded-xl border border-dark-border space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="font-cinzel font-bold text-sm text-gold">${ord.id} ${ord.type === 'Booking' ? '(Pool/Booking)' : ''}</span>
+                        <span class="font-cinzel font-bold text-sm text-gold">${ord.id} (${ord.type === 'PerDayBooking' ? 'Per Day Stay' : ord.type === 'Booking' ? 'Booking' : 'Order'})</span>
                         <span class="text-[10px] px-2.5 py-0.5 rounded-full border border-gold/40 text-gold font-bold uppercase bg-gold/10">
                             ${ord.status}
                         </span>
                     </div>
-                    ${ord.type === 'Booking' ? `
+                    ${ord.type === 'PerDayBooking' ? `
+                        <p class="text-xs text-gray-300"><strong>${ord.itemName}</strong></p>
+                        <p class="text-[11px] text-gray-400">Check-In: ${ord.checkInDate} | Check-Out: ${ord.checkOutDate} (${ord.totalDays} Days)</p>
+                    ` : ord.type === 'Booking' ? `
                         <p class="text-xs text-gray-300"><strong>${ord.itemName}</strong> for <strong>${ord.guests} guest(s)</strong></p>
                         <p class="text-[11px] text-gray-400">Date: ${ord.reservationDate} | Slot: ${ord.timeSlot}</p>
                     ` : `
