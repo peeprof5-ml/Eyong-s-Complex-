@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Socket.io Client -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Socket.io Client (Safe Fallback if offline/standalone) -->
+    <script src="/socket.io/socket.io.js" onerror="console.warn('Socket.io offline mode enabled');"></script>
     
     <script>
         tailwind.config = {
@@ -359,12 +359,14 @@
                 <p class="text-xs text-gray-400 mt-1">Enter key code to access Eyong's Complex Management.</p>
             </div>
             
-            <input type="password" id="auth-code" placeholder="Passcode" 
-                   class="w-full text-center bg-black border border-dark-border focus:border-gold rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest">
-            
-            <button onclick="loginAdmin()" class="w-full gold-btn py-3 rounded-xl text-xs font-bold tracking-wider uppercase">
-                AUTHENTICATE ACCESS
-            </button>
+            <div class="space-y-3">
+                <input type="password" id="auth-code" placeholder="Passcode" autofocus onkeydown="if(event.key === 'Enter') loginAdmin()"
+                       class="w-full text-center bg-black border border-dark-border focus:border-gold rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest">
+                
+                <button type="button" onclick="loginAdmin()" class="w-full gold-btn py-3 rounded-xl text-xs font-bold tracking-wider uppercase">
+                    AUTHENTICATE ACCESS
+                </button>
+            </div>
         </div>
     </div>
 
@@ -461,8 +463,16 @@
 
     <!-- Application Script -->
     <script>
-        // Socket.io Connection
-        const socket = io();
+        // Safe Socket.io Connection initialization with fallback
+        let socket = { emit: function() {}, on: function() {} };
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io();
+            }
+        } catch (e) {
+            console.log("Running in offline mode without socket server.");
+        }
+
         let isAuthenticated = false;
 
         let siteSettings = JSON.parse(localStorage.getItem('eyong_cameroon_settings')) || {
@@ -496,11 +506,14 @@
 
             // Socket Listeners
             socket.on('init_state', (state) => {
-                siteSettings = state.settings;
-                sections = state.sections;
-                menuItems = state.menu;
-                orders = state.orders;
+                if (state.settings) siteSettings = state.settings;
+                if (state.sections) sections = state.sections;
+                if (state.menu) menuItems = state.menu;
+                if (state.orders) orders = state.orders;
                 saveStateToStorage();
+                if (isAuthenticated) {
+                    renderDashboard();
+                }
             });
 
             socket.on('new_order_received', (order) => {
@@ -561,15 +574,20 @@
         }
 
         function loginAdmin() {
-            const pass = document.getElementById('auth-code').value;
+            const passField = document.getElementById('auth-code');
+            const pass = passField ? passField.value : '';
             if (pass === 'Edwin') {
                 isAuthenticated = true;
-                document.getElementById('modal-auth').classList.add('hidden');
+                const authModal = document.getElementById('modal-auth');
+                if (authModal) {
+                    authModal.classList.add('hidden');
+                }
                 loadSiteSettingsIntoForm();
                 renderDashboard();
-                showToast('Welcome back, Eyong Complex Admin');
+                showToast("Welcome back, Eyong Complex Admin");
             } else {
                 showToast('Invalid Security Passcode.', true);
+                if (passField) passField.value = '';
             }
         }
 
@@ -580,26 +598,34 @@
                 const tabView = document.getElementById(`view-${t}`);
                 
                 if (t === tab) {
-                    tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-gold text-gold flex items-center space-x-2 whitespace-nowrap";
-                    tabView.classList.remove('hidden');
+                    if (tabBtn) tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-gold text-gold flex items-center space-x-2 whitespace-nowrap";
+                    if (tabView) tabView.classList.remove('hidden');
                 } else {
-                    tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap";
-                    tabView.classList.add('hidden');
+                    if (tabBtn) tabBtn.className = "pb-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center space-x-2 whitespace-nowrap";
+                    if (tabView) tabView.classList.add('hidden');
                 }
             });
         }
 
         function renderDashboard() {
-            document.getElementById('header-app-title').innerText = `${siteSettings.appName} PORTAL`;
+            const titleEl = document.getElementById('header-app-title');
+            if (titleEl) titleEl.innerText = `${siteSettings.appName} PORTAL`;
 
             const completed = orders.filter(o => o.status === 'Completed');
             const totalRev = completed.reduce((s, o) => s + (o.totalAmount || 0), 0);
             const activeCount = orders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled').length;
 
-            document.getElementById('stat-revenue').innerText = formatCurrency(totalRev);
-            document.getElementById('stat-active').innerText = activeCount;
-            document.getElementById('stat-menu-count').innerText = menuItems.length;
-            document.getElementById('stat-sections-count').innerText = sections.length;
+            const revEl = document.getElementById('stat-revenue');
+            if (revEl) revEl.innerText = formatCurrency(totalRev);
+            
+            const activeEl = document.getElementById('stat-active');
+            if (activeEl) activeEl.innerText = activeCount;
+
+            const menuCountEl = document.getElementById('stat-menu-count');
+            if (menuCountEl) menuCountEl.innerText = menuItems.length;
+
+            const secCountEl = document.getElementById('stat-sections-count');
+            if (secCountEl) secCountEl.innerText = sections.length;
 
             renderOrders();
             renderSectionsTable();
@@ -608,7 +634,9 @@
 
         function renderOrders() {
             const container = document.getElementById('orders-container');
-            const filter = document.getElementById('order-filter-status').value;
+            const filterEl = document.getElementById('order-filter-status');
+            if (!container || !filterEl) return;
+            const filter = filterEl.value;
 
             const filteredOrders = orders.filter(ord => {
                 if (filter === 'All') return true;
@@ -647,7 +675,7 @@
                             <p><strong>Guests:</strong> ${ord.guests} Person(s)</p>
                             <p><strong>Date & Slot:</strong> ${ord.reservationDate} (${ord.timeSlot})</p>
                         ` : `
-                            <p><strong>Location:</strong> ${ord.location}</p>
+                            <p><strong>Location / Mode:</strong> ${ord.location}</p>
                             ${ord.notes ? `<p class="text-gold italic text-[11px]">Note: "${ord.notes}"</p>` : ''}
                         `}
                         <p><strong>Payment:</strong> <span class="text-gold font-semibold">${ord.paymentMethod || 'Desk Pay'}</span></p>
@@ -702,6 +730,7 @@
 
         function renderSectionsTable() {
             const tbody = document.getElementById('sections-table-body');
+            if (!tbody) return;
             tbody.innerHTML = sections.map(sec => `
                 <tr class="hover:bg-black/40 transition">
                     <td class="py-4 px-6 font-bold text-white flex items-center space-x-2">
@@ -738,18 +767,23 @@
             `).join('');
 
             const dishSelect = document.getElementById('dish-category');
-            dishSelect.innerHTML = sections.filter(s => s.name !== 'All').map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (dishSelect) {
+                dishSelect.innerHTML = sections.filter(s => s.name !== 'All').map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            }
         }
 
         function openSectionModal(id = null) {
-            document.getElementById('modal-section').classList.remove('hidden');
+            const modal = document.getElementById('modal-section');
+            if (modal) modal.classList.remove('hidden');
             if (id) {
                 const sec = sections.find(s => s.id === id);
-                document.getElementById('sec-id').value = sec.id;
-                document.getElementById('sec-name').value = sec.name;
-                document.getElementById('sec-type').value = sec.type;
-                document.getElementById('sec-visible').value = sec.visible !== false ? 'true' : 'false';
-                document.getElementById('sec-modal-title').innerText = 'Edit Section Configuration';
+                if (sec) {
+                    document.getElementById('sec-id').value = sec.id;
+                    document.getElementById('sec-name').value = sec.name;
+                    document.getElementById('sec-type').value = sec.type;
+                    document.getElementById('sec-visible').value = sec.visible !== false ? 'true' : 'false';
+                    document.getElementById('sec-modal-title').innerText = 'Edit Section Configuration';
+                }
             } else {
                 document.getElementById('sec-id').value = '';
                 document.getElementById('sec-name').value = '';
@@ -760,7 +794,8 @@
         }
 
         function closeSectionModal() {
-            document.getElementById('modal-section').classList.add('hidden');
+            const modal = document.getElementById('modal-section');
+            if (modal) modal.classList.add('hidden');
         }
 
         function saveSection(e) {
@@ -794,6 +829,7 @@
 
         function renderMenuTable() {
             const tbody = document.getElementById('menu-table-body');
+            if (!tbody) return;
             tbody.innerHTML = menuItems.map(item => `
                 <tr class="hover:bg-black/40 transition">
                     <td class="py-4 px-6 flex items-center space-x-3">
@@ -835,16 +871,19 @@
         }
 
         function openMenuModal(editId = null) {
-            document.getElementById('modal-dish').classList.remove('hidden');
+            const modal = document.getElementById('modal-dish');
+            if (modal) modal.classList.remove('hidden');
             if (editId) {
                 const dish = menuItems.find(m => m.id === editId);
-                document.getElementById('dish-id').value = dish.id;
-                document.getElementById('dish-name').value = dish.name;
-                document.getElementById('dish-category').value = dish.category;
-                document.getElementById('dish-price').value = dish.price;
-                document.getElementById('dish-image').value = dish.image;
-                document.getElementById('dish-desc').value = dish.description;
-                document.getElementById('dish-modal-title').innerText = 'Edit Dish / Booking Pass';
+                if (dish) {
+                    document.getElementById('dish-id').value = dish.id;
+                    document.getElementById('dish-name').value = dish.name;
+                    document.getElementById('dish-category').value = dish.category;
+                    document.getElementById('dish-price').value = dish.price;
+                    document.getElementById('dish-image').value = dish.image;
+                    document.getElementById('dish-desc').value = dish.description;
+                    document.getElementById('dish-modal-title').innerText = 'Edit Dish / Booking Pass';
+                }
             } else {
                 document.getElementById('dish-id').value = '';
                 document.getElementById('dish-name').value = '';
@@ -856,7 +895,8 @@
         }
 
         function closeMenuModal() {
-            document.getElementById('modal-dish').classList.add('hidden');
+            const modal = document.getElementById('modal-dish');
+            if (modal) modal.classList.add('hidden');
         }
 
         function saveDish(e) {
@@ -895,18 +935,29 @@
         }
 
         function loadSiteSettingsIntoForm() {
-            document.getElementById('setting-app-title').value = siteSettings.appName || '';
-            document.getElementById('setting-app-tagline').value = siteSettings.appTagline || '';
-            document.getElementById('setting-currency').value = siteSettings.currencySymbol || 'FCFA';
-            document.getElementById('setting-tax-rate').value = siteSettings.taxRate || 2.0;
-            document.getElementById('setting-announcement').value = siteSettings.announcementText || '';
-            document.getElementById('setting-contact-phone').value = siteSettings.contactPhone || '';
-            document.getElementById('setting-hours').value = siteSettings.businessHours || '';
+            const titleEl = document.getElementById('setting-app-title');
+            if (titleEl) titleEl.value = siteSettings.appName || '';
+            const taglineEl = document.getElementById('setting-app-tagline');
+            if (taglineEl) taglineEl.value = siteSettings.appTagline || '';
+            const currEl = document.getElementById('setting-currency');
+            if (currEl) currEl.value = siteSettings.currencySymbol || 'FCFA';
+            const taxEl = document.getElementById('setting-tax-rate');
+            if (taxEl) taxEl.value = siteSettings.taxRate || 2.0;
+            const annEl = document.getElementById('setting-announcement');
+            if (annEl) annEl.value = siteSettings.announcementText || '';
+            const phoneEl = document.getElementById('setting-contact-phone');
+            if (phoneEl) phoneEl.value = siteSettings.contactPhone || '';
+            const hoursEl = document.getElementById('setting-hours');
+            if (hoursEl) hoursEl.value = siteSettings.businessHours || '';
 
-            document.getElementById('setting-toggle-announcement').checked = siteSettings.showAnnouncement !== false;
-            document.getElementById('setting-toggle-momo').checked = siteSettings.enableMoMo !== false;
-            document.getElementById('setting-toggle-tracking').checked = siteSettings.enableTracking !== false;
-            document.getElementById('setting-toggle-notes').checked = siteSettings.allowNotes !== false;
+            const tAnn = document.getElementById('setting-toggle-announcement');
+            if (tAnn) tAnn.checked = siteSettings.showAnnouncement !== false;
+            const tMoMo = document.getElementById('setting-toggle-momo');
+            if (tMoMo) tMoMo.checked = siteSettings.enableMoMo !== false;
+            const tTrack = document.getElementById('setting-toggle-tracking');
+            if (tTrack) tTrack.checked = siteSettings.enableTracking !== false;
+            const tNotes = document.getElementById('setting-toggle-notes');
+            if (tNotes) tNotes.checked = siteSettings.allowNotes !== false;
         }
 
         function saveSiteSettings(e) {
@@ -934,15 +985,16 @@
 
         function showToast(msg, isError = false) {
             const toast = document.getElementById('toast');
+            if (!toast) return;
             document.getElementById('toast-message').innerText = msg;
             const icon = document.getElementById('toast-icon');
 
             if (isError) {
-                toast.classList.replace('border-gold', 'border-red-500');
-                icon.className = 'fa-solid fa-circle-exclamation text-red-500';
+                toast.className = toast.className.replace('border-gold', 'border-red-500');
+                if (icon) icon.className = 'fa-solid fa-circle-exclamation text-red-500';
             } else {
-                toast.classList.replace('border-red-500', 'border-gold');
-                icon.className = 'fa-solid fa-circle-check text-gold';
+                toast.className = toast.className.replace('border-red-500', 'border-gold');
+                if (icon) icon.className = 'fa-solid fa-circle-check text-gold';
             }
 
             toast.classList.remove('translate-y-20', 'opacity-0');
