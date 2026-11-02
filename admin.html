@@ -170,7 +170,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-4 rounded-xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-sm">Live Dispatch Console</h3>
-                    <p class="text-xs text-gray-400">Manage real-time food orders, pool reservations, and stay bookings</p>
+                    <p class="text-xs text-gray-400">Manage real-time food orders, pool reservations, and per-day stay bookings</p>
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <select id="order-filter-status" onchange="renderOrders()" class="bg-black text-xs font-semibold border border-dark-border rounded-xl px-3 py-2 text-gray-300 focus:outline-none">
@@ -194,7 +194,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-dark-card p-5 rounded-2xl border border-dark-border">
                 <div>
                     <h3 class="font-cinzel font-bold text-gold text-base">Customer Site Section Adaptability</h3>
-                    <p class="text-xs text-gray-400">Configure operating modes, visibility, and FontAwesome icons.</p>
+                    <p class="text-xs text-gray-400">Configure operating modes, icons, and categories.</p>
                 </div>
                 <button onclick="openSectionModal()" class="gold-btn px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 whitespace-nowrap">
                     <i class="fa-solid fa-folder-plus"></i>
@@ -207,7 +207,8 @@
                     <table class="w-full text-left text-xs">
                         <thead class="bg-black/80 text-gray-400 font-bold uppercase tracking-wider border-b border-dark-border">
                             <tr>
-                                <th class="py-4 px-6">Section Name & Icon</th>
+                                <th class="py-4 px-6">Section Name</th>
+                                <th class="py-4 px-6">Icon</th>
                                 <th class="py-4 px-6">Operating Mode</th>
                                 <th class="py-4 px-6">Customer Visibility</th>
                                 <th class="py-4 px-6 text-right">Actions</th>
@@ -377,7 +378,7 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             <h3 id="sec-modal-title" class="font-cinzel text-lg font-bold text-gold mb-1">Configure Section</h3>
-            <p class="text-xs text-gray-400 mb-4">Adapt customer site categories, booking modes, and icons.</p>
+            <p class="text-xs text-gray-400 mb-4">Adapt customer site categories, icons, and booking modes.</p>
 
             <form onsubmit="saveSection(event)" class="space-y-4 text-xs">
                 <input type="hidden" id="sec-id">
@@ -387,17 +388,17 @@
                            class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                 </div>
                 <div>
-                    <label class="text-gray-400 font-semibold mb-1 block">FontAwesome Icon Class</label>
-                    <input type="text" id="sec-icon" required placeholder="e.g. fa-utensils, fa-bed, fa-water-ladder, fa-wine-glass" 
+                    <label class="text-gray-400 font-semibold mb-1 block">FontAwesome Icon Class (e.g. fa-solid fa-utensils)</label>
+                    <input type="text" id="sec-icon" required placeholder="fa-solid fa-utensils" value="fa-solid fa-utensils"
                            class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
-                    <span class="text-[10px] text-gray-400 mt-1 block">Type any FontAwesome v6 class name (e.g., <code class="text-gold">fa-bed</code>)</span>
+                    <span class="text-[10px] text-gray-500 mt-1 block">Tip: Use FontAwesome 6 class names.</span>
                 </div>
                 <div>
                     <label class="text-gray-400 font-semibold mb-1 block">Customer Operating Mode</label>
                     <select id="sec-type" class="w-full bg-black border border-dark-border rounded-xl p-3 text-white focus:border-gold focus:outline-none">
                         <option value="standard">Standard Order Mode (Quantity cart selections)</option>
-                        <option value="booking">Per Person Booking Mode (Guest count, Date, Time Slot)</option>
-                        <option value="per-day">Per Day Booking Mode (Check-in, Check-out, Number of Days)</option>
+                        <option value="booking">Per Person Booking Mode (Guest count, Date, Time Slot selection)</option>
+                        <option value="per-day">Per Day Booking Mode (Check-in, Check-out, Number of Days calculation)</option>
                     </select>
                 </div>
                 <div>
@@ -501,11 +502,11 @@
         };
 
         let sections = JSON.parse(localStorage.getItem('eyong_cameroon_sections')) || [
-            { id: 'sec-all', name: 'All', type: 'standard', icon: 'fa-border-all', visible: true },
-            { id: 'sec-delicacies', name: 'Local Delicacies', type: 'standard', icon: 'fa-utensils', visible: true },
-            { id: 'sec-grill', name: 'Grill & Mains', type: 'standard', icon: 'fa-fire-burner', visible: true },
-            { id: 'sec-pool', name: 'Pool Reservation', type: 'booking', icon: 'fa-water-ladder', visible: true },
-            { id: 'sec-drinks', name: 'Drinks & Lounge', type: 'standard', icon: 'fa-wine-glass', visible: true }
+            { id: 'sec-all', name: 'All', type: 'standard', icon: 'fa-solid fa-border-all', visible: true },
+            { id: 'sec-delicacies', name: 'Local Delicacies', type: 'standard', icon: 'fa-solid fa-bowl-food', visible: true },
+            { id: 'sec-grill', name: 'Grill & Mains', type: 'standard', icon: 'fa-solid fa-fire-burner', visible: true },
+            { id: 'sec-pool', name: 'Pool Reservation', type: 'booking', icon: 'fa-solid fa-water-ladder', visible: true },
+            { id: 'sec-drinks', name: 'Drinks & Lounge', type: 'standard', icon: 'fa-solid fa-champagne-glasses', visible: true }
         ];
 
         let menuItems = JSON.parse(localStorage.getItem('eyong_cameroon_menu')) || [
@@ -540,6 +541,7 @@
             });
         };
 
+        // Convert image file selected from device gallery to base64
         function handleImageGallerySelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -555,6 +557,7 @@
             }
         }
 
+        // Web Audio API Chime Sound for Incoming Orders
         function playChimeSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -765,11 +768,11 @@
             if (!tbody) return;
             tbody.innerHTML = sections.map(sec => `
                 <tr class="hover:bg-black/40 transition">
-                    <td class="py-4 px-6 font-bold text-white flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/40 flex items-center justify-center text-gold">
-                            <i class="fa-solid ${sec.icon || 'fa-folder'} text-xs"></i>
-                        </div>
+                    <td class="py-4 px-6 font-bold text-white flex items-center space-x-2">
                         <span>${sec.name}</span>
+                    </td>
+                    <td class="py-4 px-6 text-gold">
+                        <i class="${sec.icon || 'fa-solid fa-utensils'} text-base"></i>
                     </td>
                     <td class="py-4 px-6">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -816,7 +819,7 @@
                 if (sec) {
                     document.getElementById('sec-id').value = sec.id;
                     document.getElementById('sec-name').value = sec.name;
-                    document.getElementById('sec-icon').value = sec.icon || 'fa-utensils';
+                    document.getElementById('sec-icon').value = sec.icon || 'fa-solid fa-utensils';
                     document.getElementById('sec-type').value = sec.type;
                     document.getElementById('sec-visible').value = sec.visible !== false ? 'true' : 'false';
                     document.getElementById('sec-modal-title').innerText = 'Edit Section Configuration';
@@ -824,7 +827,7 @@
             } else {
                 document.getElementById('sec-id').value = '';
                 document.getElementById('sec-name').value = '';
-                document.getElementById('sec-icon').value = 'fa-utensils';
+                document.getElementById('sec-icon').value = 'fa-solid fa-utensils';
                 document.getElementById('sec-type').value = 'standard';
                 document.getElementById('sec-visible').value = 'true';
                 document.getElementById('sec-modal-title').innerText = 'Create New Customer Section';
@@ -840,7 +843,7 @@
             e.preventDefault();
             const id = document.getElementById('sec-id').value;
             const name = document.getElementById('sec-name').value.trim();
-            const icon = document.getElementById('sec-icon').value.trim() || 'fa-utensils';
+            const icon = document.getElementById('sec-icon').value.trim() || 'fa-solid fa-utensils';
             const type = document.getElementById('sec-type').value;
             const visible = document.getElementById('sec-visible').value === 'true';
 
